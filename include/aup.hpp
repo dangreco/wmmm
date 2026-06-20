@@ -22,12 +22,14 @@
 #pragma once
 
 /// @file aup.hpp
-/// @brief Streaming parser for the AUP (Async UART Protocol) wire format.
+/// @brief Decoder and encoder for the AUP (Async UART Protocol) wire format.
 ///
 /// AUP frames arrive byte-by-byte over an asynchronous UART link, so this
 /// header provides an incremental, allocation-light state machine (@ref
-/// wmmm::aup::AupParser) that reassembles one @ref wmmm::aup::Aup frame at a
-/// time. The on-wire frame layout is:
+/// wmmm::aup::Decoder) that reassembles one @ref wmmm::aup::Frame frame at a
+/// time. The reverse direction is handled by @ref wmmm::aup::Encoder, which
+/// serialises a @ref wmmm::aup::Frame back into this byte layout. The on-wire
+/// frame layout is:
 ///
 /// @code
 // clang-format off
@@ -40,6 +42,9 @@
 ///
 /// The 16-bit @c length field is big-endian (most-significant byte first) and
 /// gives the number of payload bytes that follow the header.
+///
+/// Frames decoded by @ref Decoder can be re-serialised byte-for-byte by
+/// @ref Encoder, so the two are exact inverses for any well-formed frame.
 
 #include <cstdint>
 #include <optional>
@@ -54,9 +59,9 @@ constexpr uint8_t AUP_MAGIC2 = 0x9E;
 
 /// @brief A fully decoded AUP frame.
 ///
-/// Populated by @ref AupParser::consume once an entire frame has been received.
+/// Populated by @ref Decoder::consume once an entire frame has been received.
 /// All multi-byte fields are presented in host byte order.
-struct Aup {
+struct Frame {
   uint8_t checksum; ///< Frame checksum byte, as received (not verified).
   uint8_t flag;     ///< Protocol flag byte.
   uint8_t type;     ///< Message type byte.
@@ -69,7 +74,7 @@ struct Aup {
 /// @brief Incremental, byte-at-a-time parser for AUP frames.
 ///
 /// Feed received bytes one at a time to @ref consume. The parser tracks partial
-/// frame state internally and yields a completed @ref Aup only once the full
+/// frame state internally and yields a completed @ref Frame only once the full
 /// frame (header + declared payload) has been consumed, then resets itself for
 /// the next frame.
 ///
@@ -81,17 +86,17 @@ struct Aup {
 /// header is accepted there is no in-frame resync: the next @c length bytes are
 /// always treated as payload, even if they contain the magic markers.
 ///
-/// The parser performs no checksum validation; @ref Aup::checksum is surfaced
+/// The parser performs no checksum validation; @ref Frame::checksum is surfaced
 /// verbatim for the caller to verify if desired.
 ///
 /// @note Not thread-safe. Use one instance per UART stream.
-class AupParser {
+class Decoder {
 public:
   /// @brief Consume a single received byte.
   /// @param byte The next byte from the UART stream.
   /// @return The decoded frame if @p byte completed one; otherwise
   ///         @c std::nullopt while more bytes are still needed.
-  std::optional<Aup> consume(uint8_t byte);
+  std::optional<Frame> consume(uint8_t byte);
 
 private:
   /// Position within the frame currently being assembled.
@@ -108,7 +113,7 @@ private:
   };
 
   State state_ = State::MAGIC1; ///< Current parser position.
-  Aup frame_;                   ///< Frame being assembled.
+  Frame frame_;                 ///< Frame being assembled.
   uint16_t read_ = 0;           ///< Payload bytes accumulated so far.
 
   /// Restore the parser to its initial state, ready for the next frame.
@@ -117,6 +122,30 @@ private:
     frame_ = {};
     read_ = 0;
   }
+};
+
+/// @brief Serialise a @ref Frame back into its on-wire byte sequence.
+///
+/// Produces the exact layout described at the top of this header (start marker,
+/// header fields, big-endian length, payload), suitable for transmission over
+/// the UART link. @ref Encoder is the inverse of @ref Decoder: a frame produced
+/// by @ref Decoder::consume, when passed through @ref encode, yields the same
+/// byte sequence, and vice versa.
+///
+/// The encoder performs no checksum computation; @ref Frame::checksum is
+/// emitted verbatim, so a frame round-trips losslessly. The length field is
+/// written from @ref Frame::length and the payload bytes from @ref
+/// Frame::payload; for a well-formed frame these agree, and the caller is
+/// responsible for keeping them consistent.
+///
+/// @note Not thread-safe.
+class Encoder {
+public:
+  /// @brief Serialise a frame to its on-wire representation.
+  /// @param frame The frame to encode.
+  /// @return The complete byte sequence for the frame (header + payload). The
+  ///         returned vector is exactly @c 8 + frame.payload.size() bytes long.
+  std::vector<uint8_t> encode(const Frame &frame);
 };
 
 } // namespace wmmm::aup

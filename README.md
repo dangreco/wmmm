@@ -9,8 +9,10 @@ by the TA640FC-W-ULX thermostat, intended for use as an ESPHome custom component
 ## Status
 
 The AUP framing layer is implemented as an incremental, byte-at-a-time parser
-(`wmmm::aup::AupParser`) that reassembles `wmmm::aup::Aup` frames from an
-asynchronous UART stream. See `include/aup.hpp` for the documented public API.
+(`wmmm::aup::Decoder`) that reassembles `wmmm::aup::Frame` frames from an
+asynchronous UART stream, and a matching `wmmm::aup::Encoder` that serialises
+frames back to their on-wire byte sequence. The two are exact inverses for any
+well-formed frame. See `include/aup.hpp` for the documented public API.
 
 ## Building and testing
 

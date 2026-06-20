@@ -20,10 +20,12 @@
  */
 
 /// @file aup.cpp
-/// @brief Implementation of the AUP streaming frame parser.
+/// @brief Implementation of the AUP frame decoder and encoder.
 
 #include "aup.hpp"
+#include <cstdint>
 #include <optional>
+#include <vector>
 
 namespace wmmm::aup {
 
@@ -32,7 +34,7 @@ namespace wmmm::aup {
 // Header and payload bytes are written straight into `frame_`; the assembled
 // frame is returned (and the parser reset) on the byte that completes the
 // payload.
-std::optional<Aup> AupParser::consume(uint8_t byte) {
+std::optional<Frame> Decoder::consume(uint8_t byte) {
   switch (state_) {
   case State::MAGIC1:
     // Hunt for the start of a frame. Any non-marker byte is stream noise that
@@ -87,7 +89,7 @@ std::optional<Aup> AupParser::consume(uint8_t byte) {
       break;
     } else {
       // Zero-length payload: the frame is already complete at the header.
-      Aup frame = frame_;
+      Frame frame = frame_;
       reset();
       return frame;
     }
@@ -97,7 +99,7 @@ std::optional<Aup> AupParser::consume(uint8_t byte) {
     frame_.payload.push_back(byte);
     read_++;
     if (read_ >= frame_.length) {
-      Aup frame = frame_;
+      Frame frame = frame_;
       reset();
       return frame;
     }
@@ -106,6 +108,30 @@ std::optional<Aup> AupParser::consume(uint8_t byte) {
 
   // No frame completed on this byte; more input is needed.
   return std::nullopt;
+}
+
+std::vector<uint8_t> Encoder::encode(const Frame &frame) {
+  std::vector<uint8_t> bytes;
+  bytes.reserve(8 + frame.length);
+
+  // Magic bytes
+  bytes.push_back(AUP_MAGIC1);
+  bytes.push_back(AUP_MAGIC2);
+
+  // Header fields
+  bytes.push_back(frame.checksum);
+  bytes.push_back(frame.flag);
+  bytes.push_back(frame.type);
+  bytes.push_back(frame.command);
+
+  // Length -- convert to big-endian byte order
+  bytes.push_back(static_cast<uint8_t>(frame.length >> 8));   // MSB
+  bytes.push_back(static_cast<uint8_t>(frame.length & 0xFF)); // LSB
+
+  // Payload
+  bytes.insert(bytes.end(), frame.payload.begin(), frame.payload.end());
+
+  return bytes;
 }
 
 } // namespace wmmm::aup
