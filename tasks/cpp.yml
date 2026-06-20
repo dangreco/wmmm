@@ -1,0 +1,46 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+# yamllint disable rule:line-length
+version: "3"
+
+tasks:
+  default:
+    desc: List tasks
+    silent: true
+    cmds:
+      - task -t tasks/cpp.yml --list
+
+  clean:
+    desc: Clean build artifacts
+    silent: true
+    cmds:
+      - rm -rf build
+
+  build:
+    desc: Build the project
+    silent: true
+    cmds:
+      - cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+      - cmake --build build
+
+  test:
+    desc: Test the project
+    silent: true
+    deps:
+      - build
+    cmds:
+      - ctest --test-dir build --output-on-failure
+
+  check:
+    desc: Check for linting/formatting errors
+    silent: true
+    cmds:
+      - clang-format --dry-run --Werror $(find src include tests -type f -name '*.cpp' -o -type f -name '*.hpp')
+
+  format:
+    desc: Fix linting/formatting errors
+    silent: true
+    aliases:
+      - fmt
+    cmds:
+      - clang-format -i $(find src include tests -type f -name '*.cpp' -o -type f -name '*.hpp')
