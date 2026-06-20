@@ -1,5 +1,8 @@
 # wmmm
 
+[![CI](https://github.com/dangreco/wmmm/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dangreco/wmmm/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/dangreco/wmmm?sort=semver)](https://github.com/dangreco/wmmm/releases)
+
 A hardware-agnostic C++23 library for parsing the **AUP/WMMM UART protocol** used
 by the TA640FC-W-ULX thermostat, intended for use as an ESPHome custom component.
 
