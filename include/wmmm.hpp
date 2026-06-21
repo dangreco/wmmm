@@ -1,5 +1,5 @@
 /*
- * wmmm -- a clean-room C++ library for the AUP/WMMM UART protocol.
+ * unilux-uart -- a clean-room C++ library for the AUP/WMMM UART protocol.
  *
  * Copyright (C) 2026  Dan Greco <git@dangre.co>
  *
@@ -25,7 +25,7 @@
 /// @brief Decoder and encoder for the WMMM message layer.
 ///
 /// A WMMM message is the payload carried by an AUP frame (see @c aup.hpp): the
-/// AUP layer (@ref wmmm::aup::AupParser) supplies byte framing and length,
+/// AUP layer (@ref unilux::aup::AupParser) supplies byte framing and length,
 /// while this layer gives that payload its internal structure. Each message is
 /// a 4-byte header followed by a variable-length payload:
 ///
@@ -40,15 +40,15 @@
 ///
 /// The header's first byte is the message id; the remaining three header bytes
 /// are reserved and carried verbatim (neither interpreted nor validated). This
-/// header provides @ref wmmm::Decoder, which reassembles a @ref wmmm::Frame
-/// from a complete byte buffer, and @ref wmmm::Encoder, the exact inverse that
-/// serialises a frame back to its on-wire representation.
+/// header provides @ref unilux::Decoder, which reassembles a @ref unilux::Frame
+/// from a complete byte buffer, and @ref unilux::Encoder, the exact inverse
+/// that serialises a frame back to its on-wire representation.
 
 #include <cstdint>
 #include <optional>
 #include <vector>
 
-namespace wmmm {
+namespace unilux {
 
 /// @brief A fully decoded WMMM message.
 ///
@@ -62,11 +62,11 @@ struct Frame {
 
 /// @brief Reassembles a WMMM message from a complete byte buffer.
 ///
-/// Unlike the streaming @ref wmmm::aup::AupParser, @ref decode expects the full
-/// message (header + payload) to already be present in @p data, since framing
-/// and length are handled by the enclosing AUP layer. A buffer shorter than the
-/// 4-byte header yields @c std::nullopt; otherwise the header is consumed and
-/// every remaining byte is treated as payload.
+/// Unlike the streaming @ref unilux::aup::AupParser, @ref decode expects the
+/// full message (header + payload) to already be present in @p data, since
+/// framing and length are handled by the enclosing AUP layer. A buffer shorter
+/// than the 4-byte header yields @c std::nullopt; otherwise the header is
+/// consumed and every remaining byte is treated as payload.
 ///
 /// @note Not thread-safe.
 class Decoder {
@@ -95,4 +95,4 @@ public:
   std::vector<uint8_t> encode(const Frame &frame);
 };
 
-} // namespace wmmm
+} // namespace unilux

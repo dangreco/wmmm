@@ -3,7 +3,7 @@
 ## Development setup
 
 The ESPHome source is vendored as a git submodule (`vendor/esphome`) so that IDE
-imports/includes resolve while developing `components/wmmm/`. Initialise it after
+imports/includes resolve while developing `components/unilux_uart/`. Initialise it after
 cloning:
 
 ```sh
@@ -43,7 +43,7 @@ We use **squash-merge**. The PR title becomes the single commit on `main`, so th
 Merging a PR into `main` triggers
 [release-please](https://github.com/googleapis/release-please), which opens a
 `chore: release X.Y.Z` pull request. Merge that PR to cut a tag (`vX.Y.Z`),
-publish a [GitHub Release](https://github.com/dangreco/wmmm/releases), and update
+publish a [GitHub Release](https://github.com/dangreco/unilux-uart/releases), and update
 [`CHANGELOG.md`](CHANGELOG.md).
 
 Releases follow [Semantic Versioning](https://semver.org). Only `feat`, `fix`, `perf`,
@@ -58,9 +58,9 @@ config:
 external_components:
   - source:
       type: git
-      url: https://github.com/dangreco/wmmm.git
+      url: https://github.com/dangreco/unilux-uart.git
       ref: v1.2.3
-    components: [wmmm]
+    components: [unilux_uart]
 ```
 
 End users do not need the `vendor/esphome` submodule — ESPHome fetches the component

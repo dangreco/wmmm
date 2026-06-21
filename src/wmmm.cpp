@@ -1,5 +1,5 @@
 /*
- * wmmm -- a clean-room C++ library for the AUP/WMMM UART protocol.
+ * unilux-uart -- a clean-room C++ library for the AUP/WMMM UART protocol.
  *
  * Copyright (C) 2026  Dan Greco <git@dangre.co>
  *
@@ -25,7 +25,7 @@
 #include "wmmm.hpp"
 #include <optional>
 
-namespace wmmm {
+namespace unilux {
 
 std::optional<Frame> Decoder::decode(const std::vector<uint8_t> &data) {
   if (data.size() < 4) {
@@ -50,4 +50,4 @@ std::vector<uint8_t> Encoder::encode(const Frame &frame) {
   return data;
 };
 
-} // namespace wmmm
+} // namespace unilux

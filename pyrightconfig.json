@@ -1,5 +1,5 @@
 {
-  "include": ["esphome/components/wmmm"],
+  "include": ["esphome/components/unilux_uart"],
   "ignore": ["vendor/esphome"],
   "extraPaths": ["vendor/esphome"],
   "pythonVersion": "3.11",
