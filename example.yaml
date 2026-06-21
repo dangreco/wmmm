@@ -1,0 +1,38 @@
+---
+# yamllint disable rule:line-length
+# yamllint disable rule:comments
+#
+# Minimal device config to compile-test the unilux_uart ESPHome component.
+#
+#   esphome compile example.yaml
+#
+# The component pulls the core protocol library in as a PlatformIO dependency
+# (see esphome/components/unilux_uart/__init__.py -> cg.add_library). That fetches
+# from the remote repo at the pinned ref, so to compile working-tree changes
+# before pushing, temporarily point the dependency at a local checkout, e.g.:
+#
+#   cg.add_library("unilux-uart", None, "symlink://" + str(Path(__file__).parents[3]))
+esphome:
+  name: unilux-test
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+    advanced:
+      sram1_as_iram: true
+
+logger:
+
+uart:
+  tx_pin: GPIO4
+  rx_pin: GPIO5
+  baud_rate: 115200
+
+external_components:
+  - source:
+      type: local
+      path: esphome/components
+    components: [unilux_uart]
+
+unilux_uart:

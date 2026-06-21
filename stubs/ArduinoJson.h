@@ -4,11 +4,10 @@
 // dependency not present in the vendored source tree). This stub declares just
 // enough of the API surface for clangd to parse esphome's headers on the host.
 // It is NOT used at runtime -- real builds pull the genuine ArduinoJson via
-// platformio. See components/wmmm/compile_flags.txt (-I../../stubs).
+// platformio. See components/unilux_uart/compile_flags.txt (-I../../stubs).
 #pragma once
 
 #include <cstddef>
-#include <string>
 
 namespace ArduinoJson {
 

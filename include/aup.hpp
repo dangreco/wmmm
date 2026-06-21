@@ -1,5 +1,5 @@
 /*
- * wmmm -- a clean-room C++ library for the AUP/WMMM UART protocol.
+ * unilux-uart -- a clean-room C++ library for the AUP/WMMM UART protocol.
  *
  * Copyright (C) 2026  Dan Greco <git@dangre.co>
  *
@@ -26,9 +26,9 @@
 ///
 /// AUP frames arrive byte-by-byte over an asynchronous UART link, so this
 /// header provides an incremental, allocation-light state machine (@ref
-/// wmmm::aup::Decoder) that reassembles one @ref wmmm::aup::Frame frame at a
-/// time. The reverse direction is handled by @ref wmmm::aup::Encoder, which
-/// serialises a @ref wmmm::aup::Frame back into this byte layout. The on-wire
+/// unilux::aup::Decoder) that reassembles one @ref unilux::aup::Frame frame at
+/// a time. The reverse direction is handled by @ref unilux::aup::Encoder, which
+/// serialises a @ref unilux::aup::Frame back into this byte layout. The on-wire
 /// frame layout is:
 ///
 /// @code
@@ -50,7 +50,7 @@
 #include <optional>
 #include <vector>
 
-namespace wmmm::aup {
+namespace unilux::aup {
 
 /// First byte of the two-byte frame start marker.
 constexpr uint8_t AUP_MAGIC1 = 0x5A;
@@ -148,4 +148,4 @@ public:
   std::vector<uint8_t> encode(const Frame &frame);
 };
 
-} // namespace wmmm::aup
+} // namespace unilux::aup

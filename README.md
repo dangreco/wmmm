@@ -1,7 +1,7 @@
-# wmmm
+# unilux-uart
 
-[![CI](https://github.com/dangreco/wmmm/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dangreco/wmmm/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/dangreco/wmmm?sort=semver)](https://github.com/dangreco/wmmm/releases)
+[![CI](https://github.com/dangreco/unilux-uart/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/dangreco/unilux-uart/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/dangreco/unilux-uart?sort=semver)](https://github.com/dangreco/unilux-uart/releases)
 
 A hardware-agnostic C++23 library for parsing the **AUP/WMMM UART protocol** used
 by the TA640FC-W-ULX thermostat, intended for use as an ESPHome custom component.
@@ -9,8 +9,8 @@ by the TA640FC-W-ULX thermostat, intended for use as an ESPHome custom component
 ## Status
 
 The AUP framing layer is implemented as an incremental, byte-at-a-time parser
-(`wmmm::aup::Decoder`) that reassembles `wmmm::aup::Frame` frames from an
-asynchronous UART stream, and a matching `wmmm::aup::Encoder` that serialises
+(`unilux::aup::Decoder`) that reassembles `unilux::aup::Frame` frames from an
+asynchronous UART stream, and a matching `unilux::aup::Encoder` that serialises
 frames back to their on-wire byte sequence. The two are exact inverses for any
 well-formed frame. See `include/aup.hpp` for the documented public API.
 
@@ -32,13 +32,13 @@ git submodule update --init --recursive
 ```
 
 `vendor/esphome` is a **dev-only IDE aid** (Python + C++ import/include resolution for
-the `components/wmmm/` external component). Runtime consumers do not need it — ESPHome
+the `components/unilux_uart/` external component). Runtime consumers do not need it — ESPHome
 fetches the component via `external_components:` (see CONTRIBUTING.md).
 
 ## Releases
 
 Releases follow [Semantic Versioning](https://semver.org) and are tagged on `main`.
-See the [Releases page](https://github.com/dangreco/wmmm/releases) and
+See the [Releases page](https://github.com/dangreco/unilux-uart/releases) and
 [CHANGELOG.md](CHANGELOG.md). To pin a release in ESPHome, see
 [CONTRIBUTING.md](CONTRIBUTING.md).
 

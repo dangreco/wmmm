@@ -1,6 +1,6 @@
 CompilationDatabase: build
 ---
 If:
-  PathMatch: esphome/components/wmmm/.*
+  PathMatch: esphome/components/unilux_uart/.*
 CompileFlags:
   Compiler: clang++

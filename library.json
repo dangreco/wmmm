@@ -1,10 +1,10 @@
 {
-  "name": "wmmm",
+  "name": "unilux-uart",
   "version": "0.1.0",
   "description": "Clean-room C++ decoder/encoder for the AUP/WMMM UART protocol.",
   "keywords": "uart, protocol, esphome, aup, wmmm",
   "license": "GPL-3.0-or-later",
-  "repository": { "type": "git", "url": "https://github.com/dangreco/wmmm.git" },
+  "repository": { "type": "git", "url": "https://github.com/dangreco/unilux-uart.git" },
   "headers": ["wmmm.hpp", "aup.hpp"],
   "build": {
     "srcDir": "src",
