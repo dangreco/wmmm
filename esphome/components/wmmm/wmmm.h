@@ -8,9 +8,9 @@ namespace wmmm {
 
 class WmmmComponent : public Component, public uart::UARTDevice {
 public:
+  void dump_config() override;
   void setup() override;
   void loop() override;
-  void dump_config() override;
 };
 
 } // namespace wmmm
