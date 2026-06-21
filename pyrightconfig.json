@@ -1,0 +1,9 @@
+{
+  "include": ["esphome/components/wmmm"],
+  "ignore": ["vendor/esphome"],
+  "extraPaths": ["vendor/esphome"],
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "basic",
+  "reportMissingTypeStubs": "none",
+  "reportMissingModuleSource": "none",
+}

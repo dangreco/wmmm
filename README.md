@@ -22,6 +22,19 @@ task test    # build and run the unit tests via CTest
 task check   # clang-format / yamllint checks
 ```
 
+## Development setup
+
+The ESPHome source is vendored as a git submodule for IDE resolution only. After
+cloning, initialise it:
+
+```sh
+git submodule update --init --recursive
+```
+
+`vendor/esphome` is a **dev-only IDE aid** (Python + C++ import/include resolution for
+the `components/wmmm/` external component). Runtime consumers do not need it — ESPHome
+fetches the component via `external_components:` (see CONTRIBUTING.md).
+
 ## Releases
 
 Releases follow [Semantic Versioning](https://semver.org) and are tagged on `main`.

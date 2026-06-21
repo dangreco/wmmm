@@ -35,7 +35,7 @@ tasks:
     desc: Check for linting/formatting errors
     silent: true
     cmds:
-      - clang-format --dry-run --Werror $(find src include tests -type f -name '*.cpp' -o -type f -name '*.hpp')
+      - clang-format --dry-run --Werror $(find src include tests components -type f \( -name '*.cpp' -o -name '*.hpp' -o -name '*.h' \))
 
   format:
     desc: Fix linting/formatting errors
@@ -43,4 +43,4 @@ tasks:
     aliases:
       - fmt
     cmds:
-      - clang-format -i $(find src include tests -type f -name '*.cpp' -o -type f -name '*.hpp')
+      - clang-format -i $(find src include tests components -type f \( -name '*.cpp' -o -name '*.hpp' -o -name '*.h' \))

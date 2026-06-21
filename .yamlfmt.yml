@@ -1,6 +1,7 @@
 ---
 exclude:
   - build/
+  - vendor/
   - .pre-commit-config.yaml
 formatter:
   include_document_start: true

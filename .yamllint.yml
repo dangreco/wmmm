@@ -2,6 +2,7 @@
 extends: default
 ignore:
   - build/
+  - vendor/
   - .pre-commit-config.yaml
 rules:
   truthy:

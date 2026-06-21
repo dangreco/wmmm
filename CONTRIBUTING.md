@@ -1,5 +1,18 @@
 # Contributing
 
+## Development setup
+
+The ESPHome source is vendored as a git submodule (`vendor/esphome`) so that IDE
+imports/includes resolve while developing `components/wmmm/`. Initialise it after
+cloning:
+
+```sh
+git submodule update --init --recursive
+```
+
+This submodule is a **dev-only IDE aid** and is unrelated to how end users consume a
+release (see [Consuming a specific version](#consuming-a-specific-version) below).
+
 ## Commits & pull requests
 
 This project uses **[Conventional Commits](https://www.conventionalcommits.org)** for
@@ -49,3 +62,6 @@ external_components:
       ref: v1.2.3
     components: [wmmm]
 ```
+
+End users do not need the `vendor/esphome` submodule — ESPHome fetches the component
+itself via `external_components:`.

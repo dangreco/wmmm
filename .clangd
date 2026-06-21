@@ -1,1 +1,6 @@
 CompilationDatabase: build
+---
+If:
+  PathMatch: esphome/components/wmmm/.*
+CompileFlags:
+  Compiler: clang++

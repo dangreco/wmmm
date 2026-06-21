@@ -1,0 +1,4 @@
+[submodule "vendor/esphome"]
+	path = vendor/esphome
+	url = https://github.com/esphome/esphome.git
+	shallow = true
