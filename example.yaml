@@ -35,4 +35,11 @@ external_components:
       path: esphome/components
     components: [unilux_uart]
 
+# Each temperature channel (t1, t2) is published as a sensor by default, named
+# after its key. Override the name (or add filters), or set "disabled: true" to
+# suppress a channel entirely.
 unilux_uart:
+  t1:
+    name: "Indoor Temperature"
+  t2:
+    disabled: true

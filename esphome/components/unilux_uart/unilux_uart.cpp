@@ -51,6 +51,10 @@ void UniluxUartComponent::log_frame_(const unilux::aup::Frame &frame) {
             if constexpr (std::is_same_v<T, unilux::message::Temperature>) {
               ESP_LOGD(TAG, "│ Temperature t1=%.1f°C t2=%.1f°C",
                        static_cast<double>(m.t1), static_cast<double>(m.t2));
+              if (this->t1_sensor_ != nullptr)
+                this->t1_sensor_->publish_state(m.t1);
+              if (this->t2_sensor_ != nullptr)
+                this->t2_sensor_->publish_state(m.t2);
             }
           },
           *msg);
