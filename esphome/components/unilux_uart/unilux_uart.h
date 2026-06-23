@@ -7,6 +7,7 @@
 
 #include "aup.hpp"
 #include "message.hpp"
+#include "messages/fan_speed.hpp"
 #include "messages/mode.hpp"
 #include "wmmm.hpp"
 
@@ -74,6 +75,9 @@ public:
   /// Update the power state from a received Power frame and republish (does not
   /// transmit; this reflects device state).
   void publish_power(bool on);
+  /// Update the fan speed from a received FanSpeed frame and republish (does
+  /// not transmit; this reflects device state). Unknown values are ignored.
+  void publish_fan_speed(unilux::message::FanSpeed::Value value);
 
 protected:
   climate::ClimateTraits traits() override;

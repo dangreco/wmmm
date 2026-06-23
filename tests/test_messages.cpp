@@ -29,6 +29,7 @@
 #include <vector>
 
 #include "messages.hpp"
+#include "messages/fan_speed.hpp"
 #include "messages/mode.hpp"
 #include "messages/power.hpp"
 #include "messages/target_temperature.hpp"
@@ -38,6 +39,7 @@
 using unilux::AnyMessage;
 using unilux::decode_message;
 using unilux::Frame;
+using unilux::message::FanSpeed;
 using unilux::message::Mode;
 using unilux::message::Power;
 using unilux::message::TargetTemperature;
@@ -99,6 +101,16 @@ TEST(DecodeMessage, DecodesPowerFromMatchingId) {
   // Power occupies the fourth slot in the AnyMessage variant.
   EXPECT_EQ(msg->index(), 3u);
   EXPECT_TRUE(std::get<Power>(*msg).on);
+}
+
+TEST(DecodeMessage, DecodesFanSpeedFromMatchingId) {
+  std::optional<AnyMessage> msg =
+      decode_message(makeFrame(FanSpeed::ID, {0x02, 0x00, 0x00, 0x00}));
+  ASSERT_TRUE(msg.has_value());
+  ASSERT_TRUE(std::holds_alternative<FanSpeed>(*msg));
+  // FanSpeed occupies the fifth slot in the AnyMessage variant.
+  EXPECT_EQ(msg->index(), 4u);
+  EXPECT_EQ(std::get<FanSpeed>(*msg).value, FanSpeed::Value::Medium);
 }
 
 // --- Known id, invalid payload ---------------------------------------------

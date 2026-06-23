@@ -65,6 +65,41 @@ static bool is_active_mode(climate::ClimateMode mode) {
          mode == climate::CLIMATE_MODE_HEAT_COOL;
 }
 
+// Map the device's fan speed (0x22) to a Home Assistant climate fan mode.
+static optional<climate::ClimateFanMode>
+device_fan_to_climate(unilux::message::FanSpeed::Value value) {
+  switch (value) {
+  case unilux::message::FanSpeed::Value::Auto:
+    return climate::CLIMATE_FAN_AUTO;
+  case unilux::message::FanSpeed::Value::Low:
+    return climate::CLIMATE_FAN_LOW;
+  case unilux::message::FanSpeed::Value::Medium:
+    return climate::CLIMATE_FAN_MEDIUM;
+  case unilux::message::FanSpeed::Value::High:
+    return climate::CLIMATE_FAN_HIGH;
+  case unilux::message::FanSpeed::Value::Off:
+    return climate::CLIMATE_FAN_OFF;
+  }
+  return {};
+}
+
+// Inverse of device_fan_to_climate for the supported fan modes.
+static unilux::message::FanSpeed::Value
+climate_fan_to_device(climate::ClimateFanMode mode) {
+  switch (mode) {
+  case climate::CLIMATE_FAN_LOW:
+    return unilux::message::FanSpeed::Value::Low;
+  case climate::CLIMATE_FAN_MEDIUM:
+    return unilux::message::FanSpeed::Value::Medium;
+  case climate::CLIMATE_FAN_HIGH:
+    return unilux::message::FanSpeed::Value::High;
+  case climate::CLIMATE_FAN_OFF:
+    return unilux::message::FanSpeed::Value::Off;
+  default:
+    return unilux::message::FanSpeed::Value::Auto;
+  }
+}
+
 void UniluxUartComponent::dump_config() {
   ESP_LOGCONFIG(TAG, "Unilux UART:");
   check_uart_settings(115200);
@@ -144,6 +179,12 @@ void UniluxUartComponent::log_frame_(const unilux::aup::Frame &frame) {
               // Power off shows as the OFF mode; on restores the active mode.
               if (this->climate_ != nullptr)
                 this->climate_->publish_power(m.on);
+            } else if constexpr (std::is_same_v<T, unilux::message::FanSpeed>) {
+              ESP_LOGD(TAG, "│ %s", m.to_string().c_str());
+              // The fan speed drives the climate entity's fan mode (reflecting
+              // device state; this does not transmit).
+              if (this->climate_ != nullptr)
+                this->climate_->publish_fan_speed(m.value);
             }
           },
           *msg);
@@ -183,6 +224,11 @@ void UniluxUartClimate::setup() {
   if (std::isnan(this->target_temperature)) {
     this->target_temperature = DEFAULT_TARGET_TEMPERATURE;
   }
+  // Default the fan to AUTO until the device's 0x22 broadcast sets the real
+  // one.
+  if (!this->fan_mode.has_value()) {
+    this->fan_mode = climate::CLIMATE_FAN_AUTO;
+  }
   this->publish_state();
 }
 
@@ -199,6 +245,10 @@ climate::ClimateTraits UniluxUartClimate::traits() {
   traits.set_supported_modes(
       {climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_HEAT,
        climate::CLIMATE_MODE_COOL, climate::CLIMATE_MODE_HEAT_COOL});
+  traits.set_supported_fan_modes(
+      {climate::CLIMATE_FAN_AUTO, climate::CLIMATE_FAN_LOW,
+       climate::CLIMATE_FAN_MEDIUM, climate::CLIMATE_FAN_HIGH,
+       climate::CLIMATE_FAN_OFF});
   // Defaults; overridden by any `visual:` block in the YAML config.
   traits.set_visual_min_temperature(5.0f);
   traits.set_visual_max_temperature(40.0f);
@@ -239,6 +289,14 @@ void UniluxUartClimate::control(const climate::ClimateCall &call) {
     this->mode =
         this->power_on_ ? this->active_mode_ : climate::CLIMATE_MODE_OFF;
   }
+  if (call.get_fan_mode().has_value()) {
+    this->fan_mode = *call.get_fan_mode();
+    // Encode and transmit the new fan speed to the device.
+    if (this->parent_ != nullptr) {
+      this->parent_->send_message(
+          unilux::message::FanSpeed(climate_fan_to_device(*this->fan_mode)));
+    }
+  }
   this->publish_state();
 }
 
@@ -265,6 +323,17 @@ void UniluxUartClimate::publish_mode(unilux::message::Mode::Value value) {
 void UniluxUartClimate::publish_power(bool on) {
   this->power_on_ = on;
   this->publish_combined_mode_();
+}
+
+void UniluxUartClimate::publish_fan_speed(
+    unilux::message::FanSpeed::Value value) {
+  auto fan_mode = device_fan_to_climate(value);
+  if (!fan_mode.has_value()) {
+    ESP_LOGW(TAG, "Unknown fan speed 0x%02X", static_cast<unsigned>(value));
+    return;
+  }
+  this->fan_mode = *fan_mode;
+  this->publish_state();
 }
 
 void UniluxUartClimate::publish_combined_mode_() {

@@ -50,6 +50,7 @@
 /// @endcode
 
 #include "message.hpp"
+#include "messages/fan_speed.hpp"
 #include "messages/mode.hpp"
 #include "messages/power.hpp"
 #include "messages/target_temperature.hpp"
@@ -67,7 +68,7 @@ namespace unilux {
 /// library can decode; @ref decode_message dispatches over its alternatives.
 using AnyMessage =
     std::variant<message::Temperature, message::TargetTemperature,
-                 message::Mode, message::Power>;
+                 message::Mode, message::Power, message::FanSpeed>;
 
 /// @brief Decode a frame into its concrete message type, selected by @c msg_id.
 /// @param frame The generic WMMM frame to interpret.
