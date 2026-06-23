@@ -71,12 +71,23 @@ public:
   /// Update the HVAC mode from a received Mode frame and republish (does not
   /// transmit; this reflects device state). Unknown values are ignored.
   void publish_mode(unilux::message::Mode::Value value);
+  /// Update the power state from a received Power frame and republish (does not
+  /// transmit; this reflects device state).
+  void publish_power(bool on);
 
 protected:
   climate::ClimateTraits traits() override;
   void control(const climate::ClimateCall &call) override;
 
+  /// Recompute the HA mode from power + active mode and publish it.
+  void publish_combined_mode_();
+
   UniluxUartComponent *parent_{nullptr};
+
+  /// Power (0x21) and HVAC mode (0x5C) arrive as separate messages; HA folds
+  /// them into one mode enum (OFF when powered off, else the active mode).
+  bool power_on_{true};
+  climate::ClimateMode active_mode_{climate::CLIMATE_MODE_HEAT};
 };
 
 } // namespace unilux_uart

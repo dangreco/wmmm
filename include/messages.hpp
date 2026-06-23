@@ -51,6 +51,7 @@
 
 #include "message.hpp"
 #include "messages/mode.hpp"
+#include "messages/power.hpp"
 #include "messages/target_temperature.hpp"
 #include "messages/temperature.hpp"
 #include "wmmm.hpp"
@@ -64,8 +65,9 @@ namespace unilux {
 ///
 /// This variant is the single source of truth for the set of message types the
 /// library can decode; @ref decode_message dispatches over its alternatives.
-using AnyMessage = std::variant<message::Temperature,
-                                message::TargetTemperature, message::Mode>;
+using AnyMessage =
+    std::variant<message::Temperature, message::TargetTemperature,
+                 message::Mode, message::Power>;
 
 /// @brief Decode a frame into its concrete message type, selected by @c msg_id.
 /// @param frame The generic WMMM frame to interpret.

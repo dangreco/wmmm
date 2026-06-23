@@ -30,6 +30,7 @@
 
 #include "messages.hpp"
 #include "messages/mode.hpp"
+#include "messages/power.hpp"
 #include "messages/target_temperature.hpp"
 #include "messages/temperature.hpp"
 #include "wmmm.hpp"
@@ -38,6 +39,7 @@ using unilux::AnyMessage;
 using unilux::decode_message;
 using unilux::Frame;
 using unilux::message::Mode;
+using unilux::message::Power;
 using unilux::message::TargetTemperature;
 using unilux::message::Temperature;
 
@@ -87,6 +89,16 @@ TEST(DecodeMessage, DecodesModeFromMatchingId) {
   // Mode occupies the third slot in the AnyMessage variant.
   EXPECT_EQ(msg->index(), 2u);
   EXPECT_EQ(std::get<Mode>(*msg).value, Mode::Value::Cool);
+}
+
+TEST(DecodeMessage, DecodesPowerFromMatchingId) {
+  std::optional<AnyMessage> msg =
+      decode_message(makeFrame(Power::ID, {0x01, 0x00, 0x00, 0x00}));
+  ASSERT_TRUE(msg.has_value());
+  ASSERT_TRUE(std::holds_alternative<Power>(*msg));
+  // Power occupies the fourth slot in the AnyMessage variant.
+  EXPECT_EQ(msg->index(), 3u);
+  EXPECT_TRUE(std::get<Power>(*msg).on);
 }
 
 // --- Known id, invalid payload ---------------------------------------------

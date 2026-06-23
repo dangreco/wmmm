@@ -57,8 +57,9 @@ climate_mode_to_device(climate::ClimateMode mode) {
   }
 }
 
-// Whether a climate mode is one this entity exposes (see traits()).
-static bool is_supported_mode(climate::ClimateMode mode) {
+// Whether a climate mode is an active (powered-on) operating mode, i.e. one
+// that maps to a device HVAC mode. OFF is handled via the Power message.
+static bool is_active_mode(climate::ClimateMode mode) {
   return mode == climate::CLIMATE_MODE_HEAT ||
          mode == climate::CLIMATE_MODE_COOL ||
          mode == climate::CLIMATE_MODE_HEAT_COOL;
@@ -138,6 +139,11 @@ void UniluxUartComponent::log_frame_(const unilux::aup::Frame &frame) {
               // device state; this does not transmit).
               if (this->climate_ != nullptr)
                 this->climate_->publish_mode(m.value);
+            } else if constexpr (std::is_same_v<T, unilux::message::Power>) {
+              ESP_LOGD(TAG, "│ %s", m.to_string().c_str());
+              // Power off shows as the OFF mode; on restores the active mode.
+              if (this->climate_ != nullptr)
+                this->climate_->publish_power(m.on);
             }
           },
           *msg);
@@ -162,14 +168,18 @@ void UniluxUartClimate::setup() {
   if (restore.has_value()) {
     restore->apply(this);
   }
-  // HEAT is a single, adjustable-setpoint mode; the device has no mode concept
-  // on the wire, so the entity stays in HEAT. Seed a non-NAN target so the
-  // control is live before the first 0x2A frame arrives (the device's 0x2A
-  // broadcast overrides it shortly after).
-  // Default to HEAT only until the device's 0x5C broadcast sets the real mode.
-  if (!is_supported_mode(this->mode)) {
-    this->mode = climate::CLIMATE_MODE_HEAT;
+  // Derive the power state and active mode from the restored HA mode; the
+  // device's 0x21/0x5C broadcasts then set the real values.
+  if (this->mode == climate::CLIMATE_MODE_OFF) {
+    this->power_on_ = false;
+  } else if (is_active_mode(this->mode)) {
+    this->power_on_ = true;
+    this->active_mode_ = this->mode;
+  } else {
+    this->power_on_ = true;
+    this->active_mode_ = climate::CLIMATE_MODE_HEAT;
   }
+  this->mode = this->power_on_ ? this->active_mode_ : climate::CLIMATE_MODE_OFF;
   if (std::isnan(this->target_temperature)) {
     this->target_temperature = DEFAULT_TARGET_TEMPERATURE;
   }
@@ -184,10 +194,11 @@ climate::ClimateTraits UniluxUartClimate::traits() {
   climate::ClimateTraits traits;
   traits.add_feature_flags(climate::CLIMATE_SUPPORTS_CURRENT_TEMPERATURE);
   // Single-point (no two-point flag), so the setpoint is one adjustable value
-  // in every mode. The device's "auto" is exposed as HEAT_COOL.
-  traits.set_supported_modes({climate::CLIMATE_MODE_HEAT,
-                              climate::CLIMATE_MODE_COOL,
-                              climate::CLIMATE_MODE_HEAT_COOL});
+  // in every mode. The device's "auto" is exposed as HEAT_COOL; OFF maps to the
+  // power state (0x21).
+  traits.set_supported_modes(
+      {climate::CLIMATE_MODE_OFF, climate::CLIMATE_MODE_HEAT,
+       climate::CLIMATE_MODE_COOL, climate::CLIMATE_MODE_HEAT_COOL});
   // Defaults; overridden by any `visual:` block in the YAML config.
   traits.set_visual_min_temperature(5.0f);
   traits.set_visual_max_temperature(40.0f);
@@ -205,13 +216,28 @@ void UniluxUartClimate::control(const climate::ClimateCall &call) {
           unilux::message::TargetTemperature(this->target_temperature, 0.0f));
     }
   }
-  if (call.get_mode().has_value() && is_supported_mode(*call.get_mode())) {
-    this->mode = *call.get_mode();
-    // Encode and transmit the new HVAC mode to the device.
-    if (this->parent_ != nullptr) {
-      this->parent_->send_message(
-          unilux::message::Mode(climate_mode_to_device(this->mode)));
+  if (call.get_mode().has_value()) {
+    climate::ClimateMode requested = *call.get_mode();
+    if (requested == climate::CLIMATE_MODE_OFF) {
+      // Power off; the active mode is remembered for when it powers back on.
+      if (this->power_on_ && this->parent_ != nullptr) {
+        this->parent_->send_message(unilux::message::Power(false));
+      }
+      this->power_on_ = false;
+    } else if (is_active_mode(requested)) {
+      // Power on if needed, then set the HVAC mode if it changed.
+      if (!this->power_on_ && this->parent_ != nullptr) {
+        this->parent_->send_message(unilux::message::Power(true));
+      }
+      if (requested != this->active_mode_ && this->parent_ != nullptr) {
+        this->parent_->send_message(
+            unilux::message::Mode(climate_mode_to_device(requested)));
+      }
+      this->power_on_ = true;
+      this->active_mode_ = requested;
     }
+    this->mode =
+        this->power_on_ ? this->active_mode_ : climate::CLIMATE_MODE_OFF;
   }
   this->publish_state();
 }
@@ -232,7 +258,17 @@ void UniluxUartClimate::publish_mode(unilux::message::Mode::Value value) {
     ESP_LOGW(TAG, "Unknown HVAC mode 0x%02X", static_cast<unsigned>(value));
     return;
   }
-  this->mode = *mode;
+  this->active_mode_ = *mode;
+  this->publish_combined_mode_();
+}
+
+void UniluxUartClimate::publish_power(bool on) {
+  this->power_on_ = on;
+  this->publish_combined_mode_();
+}
+
+void UniluxUartClimate::publish_combined_mode_() {
+  this->mode = this->power_on_ ? this->active_mode_ : climate::CLIMATE_MODE_OFF;
   this->publish_state();
 }
 
